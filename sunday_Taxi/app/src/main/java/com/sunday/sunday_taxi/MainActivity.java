@@ -22,6 +22,7 @@ import android.view.MenuItem;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import net.daum.mf.map.api.MapPOIItem;
 import net.daum.mf.map.api.MapPoint;
 import net.daum.mf.map.api.MapView;
 
@@ -85,9 +86,18 @@ public class MainActivity extends AppCompatActivity {
 
         MapView mapView= new MapView(this);
         RelativeLayout mapViewContainer = findViewById(R.id.map_view);
-        mapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(latitude,longitude),true);
-
+        MapPoint mapPoint = MapPoint.mapPointWithGeoCoord(latitude,longitude);
+        mapView.setMapCenterPoint(mapPoint,true);
         mapViewContainer.addView(mapView);
+
+        MapPOIItem marker = new MapPOIItem();
+        marker.setItemName("Current Location");
+        marker.setTag(0);
+        marker.setMapPoint(mapPoint);
+        marker.setMarkerType(MapPOIItem.MarkerType.BluePin);
+        marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
+
+        mapView.addPOIItem(marker);
     }
 
     @Override
