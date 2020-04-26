@@ -5,7 +5,7 @@ android {
     buildToolsVersion "29.0.2"
 
     defaultConfig {
-        applicationId "com.example.sundaytaxi"
+        applicationId "com.sunday.sunday_taxi"
         minSdkVersion 16
         targetSdkVersion 29
         versionCode 1
@@ -24,8 +24,11 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
 
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation files('libs/libDaumMapAndroid.jar')
+    //implementation fileTree(dir: 'libs', include: ['*.jar'])
+    compile files('libs/libDaumMapAndroid.jar')
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'com.google.android.material:material:1.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'

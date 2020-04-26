@@ -1,4 +1,4 @@
-package com.example.sundaytaxi;
+package com.sunday.sunday_taxi;
 
 import org.junit.Test;
 

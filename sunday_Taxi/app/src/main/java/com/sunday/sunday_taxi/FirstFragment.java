@@ -1,4 +1,4 @@
-package com.example.sundaytaxi;
+package com.sunday.sunday_taxi;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

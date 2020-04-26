@@ -1,4 +1,4 @@
-package com.example.sundaytaxi;
+package com.sunday.sunday_taxi;
 
 import android.content.Context;
 
@@ -22,6 +22,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        assertEquals("com.example.sundaytaxi", appContext.getPackageName());
+        assertEquals("com.sunday.sunday_taxi", appContext.getPackageName());
     }
 }
