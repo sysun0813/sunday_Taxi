@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
             marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
 
             mapView.addPOIItem(marker);
-            Toast.makeText(getApplicationContext(),location.getLatitude()+" "+location.getLongitude(),Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getApplicationContext(),location.getLatitude()+" "+location.getLongitude(),Toast.LENGTH_SHORT).show();
         }
 
         @Override
