@@ -21,6 +21,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import net.daum.mf.map.api.MapPOIItem;
 import net.daum.mf.map.api.MapPoint;
@@ -35,31 +36,8 @@ public class MainActivity extends AppCompatActivity {
     private LocationListener locationListener;
     private double latitude = 37.5571992;
     private double longitude = 126.970536;
-
-    public MainActivity() {
-        this.locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                latitude=location.getLatitude();
-                longitude=location.getLongitude();
-            }
-
-            @Override
-            public void onStatusChanged(String s, int i, Bundle bundle) {
-
-            }
-
-            @Override
-            public void onProviderEnabled(String s) {
-
-            }
-
-            @Override
-            public void onProviderDisabled(String s) {
-
-            }
-        };
-    }
+    private MyLocationListener myLocationListener;
+    private RelativeLayout mapViewContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
         }
-        this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0.01f, this.locationListener);
 
         Location loc = this.locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         if(loc!=null) {
@@ -85,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         MapView mapView= new MapView(this);
-        RelativeLayout mapViewContainer = findViewById(R.id.map_view);
+        mapViewContainer = findViewById(R.id.map_view);
         MapPoint mapPoint = MapPoint.mapPointWithGeoCoord(latitude,longitude);
         mapView.setMapCenterPoint(mapPoint,true);
         mapViewContainer.addView(mapView);
@@ -98,6 +75,9 @@ public class MainActivity extends AppCompatActivity {
         marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
 
         mapView.addPOIItem(marker);
+        this.myLocationListener = new MyLocationListener(mapView);
+
+        this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0.01f, myLocationListener);
     }
 
     @Override
@@ -130,6 +110,44 @@ public class MainActivity extends AppCompatActivity {
                 break;
             default:
                 break;
+        }
+    }
+
+    private class MyLocationListener implements LocationListener {
+        private MapView mapView;
+
+        public MyLocationListener(MapView parentMapView) {
+            this.mapView = parentMapView;
+        }
+
+        @Override
+        public void onLocationChanged(Location location) {
+            // 위치가 변경되었을 때마다 현재 위치를 갱신하고 새로운 Marker 생성
+            MapPoint mapPoint = MapPoint.mapPointWithGeoCoord(location.getLatitude(),location.getLongitude());
+            MapPOIItem marker = new MapPOIItem();
+            marker.setItemName("Current Location");
+            marker.setTag(0);
+            marker.setMapPoint(mapPoint);
+            marker.setMarkerType(MapPOIItem.MarkerType.BluePin);
+            marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
+
+            mapView.addPOIItem(marker);
+            Toast.makeText(getApplicationContext(),location.getLatitude()+" "+location.getLongitude(),Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onStatusChanged(String s, int i, Bundle bundle) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String s) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String s) {
+
         }
     }
 }
