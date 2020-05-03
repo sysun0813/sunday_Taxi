@@ -113,6 +113,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        locationManager.removeUpdates(myLocationListener);
+    }
+
     private class MyLocationListener implements LocationListener {
         private MapView mapView;
 
@@ -123,6 +129,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onLocationChanged(Location location) {
             // 위치가 변경되었을 때마다 현재 위치를 갱신하고 새로운 Marker 생성
+            // 현재 위치 갱신시 새로운 Marker를 생성하기 전에 mapView에 존재하는 기존 marker 제거하기
+            mapView.removeAllPOIItems();
+
             MapPoint mapPoint = MapPoint.mapPointWithGeoCoord(location.getLatitude(),location.getLongitude());
             MapPOIItem marker = new MapPOIItem();
             marker.setItemName("Current Location");
