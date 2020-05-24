@@ -1,6 +1,7 @@
 package com.sunday.sunday_taxi;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -11,11 +12,15 @@ import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.api.client.util.StringUtils;
+import com.sunday.sunday_taxi.models.AddressModel;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.os.Handler;
+import android.os.Message;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,8 +28,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import net.daum.mf.map.api.CameraUpdate;
 import net.daum.mf.map.api.MapPOIItem;
 import net.daum.mf.map.api.MapPoint;
+import net.daum.mf.map.api.MapReverseGeoCoder;
 import net.daum.mf.map.api.MapView;
 
 import java.util.Map;
@@ -38,6 +45,9 @@ public class MainActivity extends AppCompatActivity {
     private double longitude = 126.970536;
     private MyLocationListener myLocationListener;
     private RelativeLayout mapViewContainer;
+    private MyMapViewEventListener myMapViewEventListener;
+    private MapReverseGeoCoder mapReverseGeoCoder;
+    private MyMapReverseGeoCoder myMapReverseGeoCoder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,15 +66,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Location loc = this.locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        if(loc!=null) {
-            latitude=loc.getLatitude();
-            longitude=loc.getLongitude();
+        if (loc != null) {
+            latitude = loc.getLatitude();
+            longitude = loc.getLongitude();
         }
 
-        MapView mapView= new MapView(this);
+        MapView mapView = new MapView(this);
         mapViewContainer = findViewById(R.id.map_view);
-        MapPoint mapPoint = MapPoint.mapPointWithGeoCoord(latitude,longitude);
-        mapView.setMapCenterPoint(mapPoint,true);
+        MapPoint mapPoint = MapPoint.mapPointWithGeoCoord(latitude, longitude);
+        mapView.setMapCenterPoint(mapPoint, true);
         mapViewContainer.addView(mapView);
 
         MapPOIItem marker = new MapPOIItem();
@@ -78,6 +88,13 @@ public class MainActivity extends AppCompatActivity {
         this.myLocationListener = new MyLocationListener(mapView);
 
         this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0.01f, myLocationListener);
+
+        this.myMapReverseGeoCoder = new MyMapReverseGeoCoder();
+        mapReverseGeoCoder = new MapReverseGeoCoder("3782bd3774b50c20516c5165f5539af3", mapPoint, myMapReverseGeoCoder, this);
+        mapReverseGeoCoder.startFindingAddress();
+
+        this.myMapViewEventListener = new MyMapViewEventListener(myMapReverseGeoCoder, this);
+        mapView.setMapViewEventListener(myMapViewEventListener);
     }
 
     @Override
@@ -132,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
             // 현재 위치 갱신시 새로운 Marker를 생성하기 전에 mapView에 존재하는 기존 marker 제거하기
             mapView.removeAllPOIItems();
 
-            MapPoint mapPoint = MapPoint.mapPointWithGeoCoord(location.getLatitude(),location.getLongitude());
+            MapPoint mapPoint = MapPoint.mapPointWithGeoCoord(location.getLatitude(), location.getLongitude());
             MapPOIItem marker = new MapPOIItem();
             marker.setItemName("Current Location");
             marker.setTag(0);
@@ -141,7 +158,6 @@ public class MainActivity extends AppCompatActivity {
             marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
 
             mapView.addPOIItem(marker);
-            Toast.makeText(getApplicationContext(),location.getLatitude()+" "+location.getLongitude(),Toast.LENGTH_SHORT).show();
         }
 
         @Override
@@ -156,6 +172,111 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onProviderDisabled(String s) {
+
+        }
+    }
+
+    private class MyMapViewEventListener implements MapView.MapViewEventListener {
+        private MyMapReverseGeoCoder myMapReverseGeoCoder;
+        private MapReverseGeoCoder mapReverseGeoCoder;
+        private Activity activity;
+
+        public MyMapViewEventListener(MyMapReverseGeoCoder myMapReverseGeoCoder, Activity activity) {
+            this.myMapReverseGeoCoder = myMapReverseGeoCoder;
+            this.activity = activity;
+        }
+
+        @Override
+        public void onMapViewInitialized(MapView mapView) {
+
+        }
+
+        @Override
+        public void onMapViewCenterPointMoved(MapView mapView, MapPoint mapPoint) {
+            mapReverseGeoCoder = new MapReverseGeoCoder("3782bd3774b50c20516c5165f5539af3", mapPoint, myMapReverseGeoCoder, activity);
+            mapReverseGeoCoder.startFindingAddress();
+            mapView.removeAllPOIItems();
+            MapPOIItem marker = new MapPOIItem();
+            marker.setItemName("Current Location");
+            marker.setTag(0);
+            marker.setMapPoint(mapPoint);
+            marker.setMarkerType(MapPOIItem.MarkerType.BluePin);
+            marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
+
+            mapView.addPOIItem(marker);
+        }
+
+        @Override
+        public void onMapViewZoomLevelChanged(MapView mapView, int i) {
+
+        }
+
+        @Override
+        public void onMapViewSingleTapped(MapView mapView, MapPoint mapPoint) {
+
+        }
+
+        @Override
+        public void onMapViewDoubleTapped(MapView mapView, MapPoint mapPoint) {
+
+        }
+
+        @Override
+        public void onMapViewLongPressed(MapView mapView, MapPoint mapPoint) {
+
+        }
+
+        @Override
+        public void onMapViewDragStarted(MapView mapView, MapPoint mapPoint) {
+
+        }
+
+        @Override
+        public void onMapViewDragEnded(MapView mapView, MapPoint mapPoint) {
+
+        }
+
+        @Override
+        public void onMapViewMoveFinished(MapView mapView, MapPoint mapPoint) {
+            Thread request = new Thread(new AddressRequester(mapPoint.getMapPointGeoCoord().latitude, mapPoint.getMapPointGeoCoord().longitude, makeHandler()));
+            request.start();
+        }
+
+        private Handler makeHandler() {
+            return new Handler() {
+                @Override
+                public void handleMessage(@NonNull Message msg) {
+                    super.handleMessage(msg);
+                    AddressModel addressModel = (AddressModel) msg.obj;
+                    StringBuilder stringBuilder = new StringBuilder();
+
+                    TextView addressName = findViewById(R.id.address);
+
+                    if (addressModel.documents.get(0).roadAddress.buildingName != null) {
+                        stringBuilder.append(addressModel.documents.get(0).roadAddress.addressName);
+                        stringBuilder.append("\n");
+                        stringBuilder.append(addressModel.documents.get(0).roadAddress.buildingName);
+                        addressName.setText(stringBuilder.toString());
+                    } else if (addressModel.documents.get(0).roadAddress.buildingName == null && addressModel.documents.get(0).roadAddress.addressName != null) {
+                        stringBuilder.append(addressModel.documents.get(0).roadAddress.addressName);
+                        addressName.setText(stringBuilder.toString());
+                    } else if (addressModel.documents.get(0).roadAddress.addressName == null) {
+                        stringBuilder.append(addressModel.documents.get(0).address.addressName);
+                        addressName.setText(stringBuilder.toString());
+                    }
+                }
+            };
+        }
+    }
+
+    private class MyMapReverseGeoCoder implements MapReverseGeoCoder.ReverseGeoCodingResultListener {
+        @Override
+        public void onReverseGeoCoderFoundAddress(MapReverseGeoCoder mapReverseGeoCoder, String s) {
+            //Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onReverseGeoCoderFailedToFindAddress(MapReverseGeoCoder mapReverseGeoCoder) {
 
         }
     }
